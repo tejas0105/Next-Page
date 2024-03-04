@@ -17,7 +17,9 @@ interface Item {
 export default function Home() {
   const [result, setResult] = useState([]);
   const getData = async () => {
-    const response = await axios.get("http://127.0.0.1:8000/api/finalpage");
+    const response = await axios.get(
+      "https://nodejs-deploy-rjf0.onrender.com/api/finalpage"
+    );
     console.log(response);
     setResult(response?.data?.data);
   };
