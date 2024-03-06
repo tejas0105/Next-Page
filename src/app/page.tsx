@@ -14,22 +14,67 @@ interface Item {
   hidden: boolean;
 }
 
+interface Coordinates {
+  latitude: Number;
+  longitude: Number;
+}
+
 export default function Home() {
-  const [result, setResult] = useState([]);
+  const [result, setResult] = useState<Item[]>([]);
+  const [coordinates, setCoordinates] = useState<Coordinates>();
+  const getCoordinates = () => {
+    return new Promise((resolve, reject) => {
+      if (navigator.geolocation) {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const coords = position.coords;
+            resolve(coords);
+          },
+          (error) => {
+            console.log("Error getting location: " + error.message);
+            reject(error);
+          }
+        );
+      } else {
+        console.log("Geolocation is not supported by this browser");
+        reject(new Error("Geo location not supported"));
+      }
+    });
+  };
   const getData = async () => {
-    const response = await axios.get(
-      "https://nodejs-deploy-rjf0.onrender.com/api/finalpage"
-    );
+    const response = await axios.get("http://127.0.0.1:8000/api/finalpage");
     console.log(response);
     setResult(response?.data?.data);
+    const ipResp = await axios.get("https://api.ipify.org?format=json");
+    const ip = ipResp?.data;
+    console.log(ip);
+    // console.log(result);
+    // console.log({ lat: result.latitude, long: result.longitude });
   };
+
+  // const sendCoordinates = async () => {
+  //   try {
+  //     const result: Coordinates = await getCoordinates();
+  //     console.log(result);
+  //     // if (result && result?.latitude && result?.longitude) {
+  //     //   const resp = await axios.post("http://127.0.0.1:8000/api/getCoord", {
+  //     //     lat: result?.latitude,
+  //     //     long: result?.longitude,
+  //     //   });
+  //     //   console.log(resp?.data?.message);
+  //     // }
+  //   } catch (error: any) {
+  //     if (error.code === 1) {
+  //       await axios.post("http://127.0.0.1:8000/api/getCoord", {
+  //         allowed: false,
+  //       });
+  //     }
+  //   }
+  // };
+
   useEffect(() => {
-    console.log(
-      navigator?.geolocation?.getCurrentPosition((position) => {
-        console.log(position?.coords);
-      })
-    );
     getData();
+    // sendCoordinates();
   }, []);
 
   useEffect(() => {
