@@ -45,41 +45,45 @@ export default function Home() {
     const response = await axios.get("http://127.0.0.1:8000/api/finalpage");
     console.log(response);
     setResult(response?.data?.data);
-    const ipResp = await axios.get("https://api.ipify.org?format=json");
-    const ip = ipResp?.data;
-    console.log(ip);
     // console.log(result);
     // console.log({ lat: result.latitude, long: result.longitude });
   };
 
-  // const sendCoordinates = async () => {
-  //   try {
-  //     const result: Coordinates = await getCoordinates();
-  //     console.log(result);
-  //     // if (result && result?.latitude && result?.longitude) {
-  //     //   const resp = await axios.post("http://127.0.0.1:8000/api/getCoord", {
-  //     //     lat: result?.latitude,
-  //     //     long: result?.longitude,
-  //     //   });
-  //     //   console.log(resp?.data?.message);
-  //     // }
-  //   } catch (error: any) {
-  //     if (error.code === 1) {
-  //       await axios.post("http://127.0.0.1:8000/api/getCoord", {
-  //         allowed: false,
-  //       });
-  //     }
-  //   }
-  // };
+  const sendCoordinates = async () => {
+    try {
+      const result: Coordinates = await getCoordinates();
+      console.log(result);
+      const ipResp = await axios.get("https://api.ipify.org?format=json");
+      const ip = ipResp?.data;
+      console.log(ip);
+      const body = {
+        lat: result?.latitude,
+        long: result?.longitude,
+        ip: ip,
+      };
+      const resp = await axios.post("http://127.0.0.1:8000/api/getCoord", body);
+      console.log(resp?.data?.message);
+    } catch (error: any) {
+      console.log(error);
+      if (error.code === 1) {
+        const ipResp = await axios.get("https://api.ipify.org?format=json");
+        const ip = ipResp?.data;
+        await axios.post("http://127.0.0.1:8000/api/getCoord", {
+          ip: ip,
+          allowed: false,
+        });
+      }
+    }
+  };
 
   useEffect(() => {
     getData();
-    // sendCoordinates();
+    sendCoordinates();
   }, []);
 
-  useEffect(() => {
-    if (result) console.log(result);
-  }, [result]);
+  // useEffect(() => {
+  //   if (result) console.log(result);
+  // }, [result]);
   return (
     <div className="flex flex-col items-center h-screen border">
       <div className="mt-16 h-full">
