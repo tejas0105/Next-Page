@@ -51,7 +51,7 @@ export default function Home() {
 
   const sendCoordinates = async () => {
     try {
-      const result: Coordinates = await getCoordinates();
+      const result: unknown = await getCoordinates();
       console.log(result);
       const ipResp = await axios.get("https://api.ipify.org?format=json");
       const ip = ipResp?.data;
