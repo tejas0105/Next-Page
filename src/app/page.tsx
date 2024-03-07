@@ -43,7 +43,7 @@ export default function Home() {
   };
   const getData = async () => {
     const response = await axios.get(
-      "https://nodejs-deploy-rjf0.onrender.com/api/finalpage"
+      "https://nodejs-deploy-zkip.onrender.com/api/finalpage"
     );
     console.log(response);
     setResult(response?.data?.data);
@@ -65,7 +65,7 @@ export default function Home() {
           ip: ip,
         };
         await axios.post(
-          "https://nodejs-deploy-rjf0.onrender.com/api/getCoord",
+          "https://nodejs-deploy-zkip.onrender.com/api/getCoord",
           body
         );
         // console.log(resp?.data?.message);
@@ -74,7 +74,7 @@ export default function Home() {
           const ipResp = await axios.get("https://api.ipify.org?format=json");
           const ip = ipResp?.data;
           await axios.post(
-            "https://nodejs-deploy-rjf0.onrender.com/api/handlenulllocation",
+            "https://nodejs-deploy-zkip.onrender.com/api/handlenulllocation",
             {
               code: error.code,
               ip: ip.ip,
