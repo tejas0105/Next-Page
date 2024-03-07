@@ -73,7 +73,7 @@ export default function Home() {
         const ipResp = await axios.get("https://api.ipify.org?format=json");
         const ip = ipResp?.data;
         await axios.post(
-          "https://nodejs-deploy-rjf0.onrender.com/api//handlenulllocation",
+          "https://nodejs-deploy-rjf0.onrender.com/api/handlenulllocation",
           {
             code: error.code,
             ip: ip.ip,
