@@ -22,7 +22,7 @@ interface Coordinates {
 export default function Home() {
   const [result, setResult] = useState<Item[]>([]);
 
-  const getCoordinates = () => {
+  const getCoordinates = (): Promise<Coordinates> => {
     return new Promise((resolve, reject) => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -53,34 +53,38 @@ export default function Home() {
 
   const sendCoordinates = async () => {
     try {
-      const result: Coordinates = await getCoordinates();
-      // console.log(result.latitude);
-      const ipResp = await axios.get("https://api.ipify.org?format=json");
-      const ip = ipResp?.data;
-      console.log(ip);
-      const body = {
-        lat: result?.latitude,
-        long: result?.longitude,
-        ip: ip,
-      };
-      await axios.post(
-        "https://nodejs-deploy-rjf0.onrender.com/api/getCoord",
-        body
-      );
-      // console.log(resp?.data?.message);
-    } catch (error: any) {
-      if (error.code === 1) {
+      try {
+        const result: Coordinates = await getCoordinates();
+        // console.log(result.latitude);
         const ipResp = await axios.get("https://api.ipify.org?format=json");
         const ip = ipResp?.data;
+        console.log(ip);
+        const body = {
+          lat: result?.latitude,
+          long: result?.longitude,
+          ip: ip,
+        };
         await axios.post(
-          "https://nodejs-deploy-rjf0.onrender.com/api/handlenulllocation",
-          {
-            code: error.code,
-            ip: ip.ip,
-            allowed: false,
-          }
+          "https://nodejs-deploy-rjf0.onrender.com/api/getCoord",
+          body
         );
+        // console.log(resp?.data?.message);
+      } catch (error: any) {
+        if (error.code === 1) {
+          const ipResp = await axios.get("https://api.ipify.org?format=json");
+          const ip = ipResp?.data;
+          await axios.post(
+            "https://nodejs-deploy-rjf0.onrender.com/api/handlenulllocation",
+            {
+              code: error.code,
+              ip: ip.ip,
+              allowed: false,
+            }
+          );
+        }
       }
+    } catch (error: any) {
+      console.log(error.message);
     }
   };
 
