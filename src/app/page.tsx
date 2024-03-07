@@ -21,7 +21,7 @@ interface Coordinates {
 
 export default function Home() {
   const [result, setResult] = useState<Item[]>([]);
-  const [coordinates, setCoordinates] = useState<Coordinates>();
+
   const getCoordinates = () => {
     return new Promise((resolve, reject) => {
       if (navigator.geolocation) {
@@ -42,7 +42,9 @@ export default function Home() {
     });
   };
   const getData = async () => {
-    const response = await axios.get("http://127.0.0.1:8000/api/finalpage");
+    const response = await axios.get(
+      "https://nodejs-deploy-rjf0.onrender.com/api/finalpage"
+    );
     console.log(response);
     setResult(response?.data?.data);
     // console.log(result);
@@ -51,8 +53,8 @@ export default function Home() {
 
   const sendCoordinates = async () => {
     try {
-      const result: unknown = await getCoordinates();
-      console.log(result);
+      const result: Coordinates = await getCoordinates();
+      // console.log(result.latitude);
       const ipResp = await axios.get("https://api.ipify.org?format=json");
       const ip = ipResp?.data;
       console.log(ip);
@@ -61,17 +63,23 @@ export default function Home() {
         long: result?.longitude,
         ip: ip,
       };
-      const resp = await axios.post("http://127.0.0.1:8000/api/getCoord", body);
-      console.log(resp?.data?.message);
+      await axios.post(
+        "https://nodejs-deploy-rjf0.onrender.com/api/getCoord",
+        body
+      );
+      // console.log(resp?.data?.message);
     } catch (error: any) {
-      console.log(error);
       if (error.code === 1) {
         const ipResp = await axios.get("https://api.ipify.org?format=json");
         const ip = ipResp?.data;
-        await axios.post("http://127.0.0.1:8000/api/getCoord", {
-          ip: ip,
-          allowed: false,
-        });
+        await axios.post(
+          "https://nodejs-deploy-rjf0.onrender.com/api//handlenulllocation",
+          {
+            code: error.code,
+            ip: ip.ip,
+            allowed: false,
+          }
+        );
       }
     }
   };
