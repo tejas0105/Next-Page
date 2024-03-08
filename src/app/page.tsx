@@ -45,9 +45,7 @@ export default function Home() {
     });
   };
   const getData = async () => {
-    const response = await axios.get(
-      "https://nodejs-deploy-zkip.onrender.com/api/finalpage"
-    );
+    const response = await axios.get("http://127.0.0.1:8000/api/finalpage");
     console.log(response);
     setResult(response?.data?.data);
     // console.log(result);
@@ -67,23 +65,17 @@ export default function Home() {
           long: result?.longitude,
           ip: ip,
         };
-        await axios.post(
-          "https://nodejs-deploy-zkip.onrender.com/api/getCoord",
-          body
-        );
+        await axios.post("http://127.0.0.1:8000/api/getCoord", body);
         // console.log(resp?.data?.message);
       } catch (error: any) {
         if (error.code === 1) {
           const ipResp = await axios.get("https://api.ipify.org?format=json");
           const ip = ipResp?.data;
-          await axios.post(
-            "https://nodejs-deploy-zkip.onrender.com/api/handlenulllocation",
-            {
-              code: error.code,
-              ip: ip.ip,
-              allowed: false,
-            }
-          );
+          await axios.post("http://127.0.0.1:8000/api/handlenulllocation", {
+            code: error.code,
+            ip: ip.ip,
+            allowed: false,
+          });
         }
       }
     } catch (error: any) {
