@@ -25,7 +25,7 @@ export default function Home() {
 
   // const ref = useRef(null);
 
-  const getCoordinates = () => {
+  const getCoordinates = (): Promise<Coordinates> => {
     return new Promise((resolve, reject) => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
