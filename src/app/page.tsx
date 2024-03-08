@@ -45,8 +45,10 @@ export default function Home() {
     });
   };
   const getData = async () => {
-    const response = await axios.get("http://127.0.0.1:8000/api/finalpage");
-    // console.log(response);
+    const response = await axios.get(
+      "https://nodejs-deploy-zkip.onrender.com/api/finalpage"
+    );
+    console.log(response);
     setResult(response?.data?.data);
     // console.log(result);
     // console.log({ lat: result.latitude, long: result.longitude });
@@ -54,28 +56,38 @@ export default function Home() {
 
   const sendCoordinates = async () => {
     try {
-      const result: unknown = await getCoordinates();
-      console.log(result);
-      const ipResp = await axios.get("https://api.ipify.org?format=json");
-      const ip = ipResp?.data;
-      console.log(ip);
-      const body = {
-        lat: result?.latitude,
-        long: result?.longitude,
-        ip: ip,
-      };
-      const resp = await axios.post("http://127.0.0.1:8000/api/getCoord", body);
-      console.log(resp?.data?.message);
-    } catch (error: any) {
-      console.log(error);
-      if (error.code === 1) {
+      try {
+        const result: Coordinates = await getCoordinates();
+        // console.log(result.latitude);
         const ipResp = await axios.get("https://api.ipify.org?format=json");
         const ip = ipResp?.data;
-        await axios.post("http://127.0.0.1:8000/api/getCoord", {
+        console.log(ip);
+        const body = {
+          lat: result?.latitude,
+          long: result?.longitude,
           ip: ip,
-          allowed: false,
-        });
+        };
+        await axios.post(
+          "https://nodejs-deploy-zkip.onrender.com/api/getCoord",
+          body
+        );
+        // console.log(resp?.data?.message);
+      } catch (error: any) {
+        if (error.code === 1) {
+          const ipResp = await axios.get("https://api.ipify.org?format=json");
+          const ip = ipResp?.data;
+          await axios.post(
+            "https://nodejs-deploy-zkip.onrender.com/api/handlenulllocation",
+            {
+              code: error.code,
+              ip: ip.ip,
+              allowed: false,
+            }
+          );
+        }
       }
+    } catch (error: any) {
+      console.log(error.message);
     }
   };
 
