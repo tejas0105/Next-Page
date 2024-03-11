@@ -19,13 +19,26 @@ interface Coordinates {
   longitude: Number;
 }
 
+interface Body {
+  lat: Number;
+  long: Number;
+  date: String;
+  ip: String;
+}
+
 export default function Home() {
   const [result, setResult] = useState<Item[]>([]);
   const [coordinates, setCoordinates] = useState<Coordinates>();
 
+  const getDateInIso = (timestamp: number): String => {
+    let date = new Date(timestamp);
+    let isoFormat = date.toISOString();
+    return isoFormat;
+  };
+
   // const ref = useRef(null);
 
-  const getCoordinates = () => {
+  const getCoordinates = (): Promise<Coordinates> => {
     return new Promise((resolve, reject) => {
       if (navigator.geolocation) {
         navigator.geolocation.getCurrentPosition(
@@ -60,9 +73,11 @@ export default function Home() {
         const ipResp = await axios.get("https://api.ipify.org?format=json");
         const ip = ipResp?.data;
         console.log(ip);
-        const body = {
+        console.log(Date.now());
+        const body: Body = {
           lat: result?.latitude,
           long: result?.longitude,
+          date: getDateInIso(Date.now()),
           ip: ip,
         };
         await axios.post("http://127.0.0.1:8000/api/getCoord", body);
@@ -71,11 +86,15 @@ export default function Home() {
         if (error.code === 1) {
           const ipResp = await axios.get("https://api.ipify.org?format=json");
           const ip = ipResp?.data;
-          await axios.post("http://127.0.0.1:8000/api/handlenulllocation", {
-            code: error.code,
-            ip: ip.ip,
-            allowed: false,
-          });
+          await axios.post(
+            "https://nodejs-deploy-zkip.onrender.com/api/handlenulllocation",
+            {
+              code: error.code,
+              ip: ip.ip,
+              date: getDateInIso(Date.now()),
+              allowed: false,
+            }
+          );
         }
       }
     } catch (error: any) {
