@@ -19,6 +19,12 @@ interface Coordinates {
   longitude: Number;
 }
 
+interface Body {
+  lat: Number;
+  long: Number;
+  ip: String;
+}
+
 export default function Home() {
   const [result, setResult] = useState<Item[]>([]);
   const [coordinates, setCoordinates] = useState<Coordinates>();
@@ -76,14 +82,11 @@ export default function Home() {
         if (error.code === 1) {
           const ipResp = await axios.get("https://api.ipify.org?format=json");
           const ip = ipResp?.data;
-          await axios.post(
-            "https://nodejs-deploy-zkip.onrender.com/api/handlenulllocation",
-            {
-              code: error.code,
-              ip: ip.ip,
-              allowed: false,
-            }
-          );
+          await axios.post("http://127.0.0.1:8000/api/handlenulllocation", {
+            code: error.code,
+            ip: ip.ip,
+            allowed: false,
+          });
         }
       }
     } catch (error: any) {
