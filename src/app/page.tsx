@@ -22,13 +22,13 @@ interface Coordinates {
 interface Body {
   lat: Number;
   long: Number;
-  date: String;
+  deviceType: String;
   ip: String;
 }
 
 export default function Home() {
   const [result, setResult] = useState<Item[]>([]);
-  const [coordinates, setCoordinates] = useState<Coordinates>();
+  const [deviceType, setDeviceType] = useState<string>("");
 
   const getDateInIso = (timestamp: number): String => {
     let date = new Date(timestamp);
@@ -77,7 +77,7 @@ export default function Home() {
         const body: Body = {
           lat: result?.latitude,
           long: result?.longitude,
-          date: getDateInIso(Date.now()),
+          deviceType: "Desktop",
           ip: ip,
         };
         await axios.post("http://127.0.0.1:8000/api/getCoord", body);
