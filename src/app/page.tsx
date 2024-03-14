@@ -93,7 +93,7 @@ export default function Home() {
           ip: ip,
         };
         await axios.post(
-          "https://nodejs-deploy-ruz9.onrender.com/getCoord",
+          "https://nodejs-deploy-ruz9.onrender.com/api/getCoord",
           body
         );
         // console.log(resp?.data?.message);
