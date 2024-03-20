@@ -49,7 +49,7 @@ export default function Home() {
   });
   const [redirectLink, setRedirectLink] = useState("");
   const [redirectLinkLoading, setRedirectLinkLoading] = useState(false);
-  const [startTime, setStartTime] = useState(null);
+  const [startTime, setStartTime] = useState<number>(0);
 
   const searchParams = useSearchParams();
 
@@ -144,9 +144,9 @@ export default function Home() {
   const redirectTo = async (linkId: string) => {
     if (startTime === null) return;
 
-    const currentTime = new Date().getTime();
-    const timeToClick = (currentTime - startTime) / 1000;
-    console.log("Time to click:", timeToClick, "seconds");
+    // const currentTime = new Date().getTime();
+    // const timeToClick = (currentTime - startTime) / 1000;
+    // console.log("Time to click:", timeToClick, "seconds");
     const postData = await axios.post("http://127.0.0.1:8000/api/updateView", {
       linkId: linkId,
       lat: coordinates?.latitude,
@@ -212,10 +212,10 @@ export default function Home() {
     }
   };
 
-  const handleTTC = async () => {
-    const startTime = new Date().getTime();
-    setStartTime(startTime);
-  };
+  // const handleTTC = async () => {
+  //   const startTime = new Date().getTime();
+  //   setStartTime(startTime);
+  // };
 
   useEffect(() => {
     let referrer = document.referrer;
@@ -225,7 +225,7 @@ export default function Home() {
   useEffect(() => {
     getData();
     handleResize();
-    handleTTC();
+    // handleTTC();
   }, []);
 
   useEffect(() => {
