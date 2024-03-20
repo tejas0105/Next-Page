@@ -205,7 +205,7 @@ const FinalPage = () => {
   const getShareLink = async (linkId: string) => {
     setRedirectLinkLoading(true);
     const response = await axios.get(
-      `https://nodejs-deploy-ruz9.onrender.com/api/redirectsharelink/${linkId}`
+      `https://nodejs-deploy-ruz9.onrender.com/api/getsharelink/${linkId}`
     );
     setRedirectLink(response?.data?.message);
     setRedirectLinkLoading(false);
