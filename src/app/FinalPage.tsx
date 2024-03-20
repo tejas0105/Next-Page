@@ -156,12 +156,15 @@ const FinalPage = () => {
     // const currentTime = new Date().getTime();
     // const timeToClick = (currentTime - startTime) / 1000;
     // console.log("Time to click:", timeToClick, "seconds");
-    const postData = await axios.post("http://127.0.0.1:8000/api/updateView", {
-      linkId: linkId,
-      lat: coordinates?.latitude,
-      long: coordinates?.longitude,
-      ip: await getIp(),
-    });
+    const postData = await axios.post(
+      "https://nodejs-deploy-ruz9.onrender.com/api/updateView",
+      {
+        linkId: linkId,
+        lat: coordinates?.latitude,
+        long: coordinates?.longitude,
+        ip: await getIp(),
+      }
+    );
     console.log(postData?.data?.message);
   };
 
@@ -202,7 +205,7 @@ const FinalPage = () => {
   const getShareLink = async (linkId: string) => {
     setRedirectLinkLoading(true);
     const response = await axios.get(
-      `https://nodejs-deploy-ruz9.onrender.com/${linkId}`
+      `https://nodejs-deploy-ruz9.onrender.com/api/redirectsharelink/${linkId}`
     );
     setRedirectLink(response?.data?.message);
     setRedirectLinkLoading(false);
