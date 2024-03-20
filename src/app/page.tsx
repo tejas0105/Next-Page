@@ -49,6 +49,7 @@ export default function Home() {
   });
   const [redirectLink, setRedirectLink] = useState("");
   const [redirectLinkLoading, setRedirectLinkLoading] = useState(false);
+  const [startTime, setStartTime] = useState(null);
 
   const searchParams = useSearchParams();
 
@@ -74,6 +75,12 @@ export default function Home() {
       }
     });
   };
+
+  const getIp = async () => {
+    const response = await axios.get("https://api.ipify.org?format=json");
+    return response?.data;
+  };
+
   const getData = async () => {
     const response = await axios.get("http://127.0.0.1:8000/api/finalpage");
     console.log(response);
@@ -84,7 +91,7 @@ export default function Home() {
   };
 
   const handleResize = () => {
-    const { innerWidth, innerHeight } = window;
+    const { innerWidth } = window;
     if (innerWidth <= 768) setDeviceType("mobile");
     else if (innerWidth > 768 && innerWidth <= 1024) setDeviceType("tablet");
     else setDeviceType("desktop");
@@ -93,24 +100,24 @@ export default function Home() {
   const sendCoordinates = async () => {
     try {
       try {
-        setIsLoading(true);
+        // setIsLoading(true);
         const result: Coordinates = await getCoordinates();
         setCoordinates({
           latitude: result?.latitude,
           longitude: result?.longitude,
         });
-        const ipResp = await axios.get("https://api.ipify.org?format=json");
-        const ip = ipResp?.data;
-        console.log(ip);
-        console.log(Date.now());
+        // const ipResp = await axios.get("https://api.ipify.org?format=json");
+        // const ip = ipResp?.data;
+        // console.log(ip);
+        // console.log(Date.now());
         const body: Body = {
           lat: result?.latitude,
           long: result?.longitude,
           deviceType: deviceType,
-          ip: ip,
+          ip: await getIp(),
         };
         await axios.post("http://127.0.0.1:8000/api/getCoord", body);
-        setIsLoading(false);
+        // setIsLoading(false);
         // console.log(resp?.data?.message);
       } catch (error: any) {
         if (error.code === 1) {
@@ -130,10 +137,16 @@ export default function Home() {
   };
 
   const redirectTo = async (linkId: string) => {
+    if (startTime === null) return;
+
+    const currentTime = new Date().getTime();
+    const timeToClick = (currentTime - startTime) / 1000;
+    console.log("Time to click:", timeToClick, "seconds");
     const postData = await axios.post("http://127.0.0.1:8000/api/updateView", {
       linkId: linkId,
       lat: coordinates?.latitude,
       long: coordinates?.longitude,
+      ip: await getIp(),
     });
     console.log(postData?.data?.message);
   };
@@ -194,9 +207,20 @@ export default function Home() {
     }
   };
 
+  const handleTTC = async () => {
+    const startTime = new Date().getTime();
+    setStartTime(startTime);
+  };
+
+  useEffect(() => {
+    let referrer = document.referrer;
+    console.log(referrer);
+  }, []);
+
   useEffect(() => {
     getData();
     handleResize();
+    handleTTC();
   }, []);
 
   useEffect(() => {
