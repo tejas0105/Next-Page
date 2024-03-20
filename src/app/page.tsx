@@ -29,6 +29,7 @@ interface Body {
   lat: Number;
   long: Number;
   deviceType: String;
+  referrer: String;
   ip: String;
 }
 
@@ -116,6 +117,7 @@ export default function Home() {
           lat: result?.latitude,
           long: result?.longitude,
           deviceType: deviceType,
+          referrer: document.referrer.split(".")[1],
           ip: await getIp(),
         };
         await axios.post("http://127.0.0.1:8000/api/getCoord", body);
@@ -131,6 +133,7 @@ export default function Home() {
               lat: null,
               long: null,
               deviceType: deviceType,
+              referrer: document.referrer.split(".")[1],
               ip: ip,
             }
           );
@@ -193,7 +196,7 @@ export default function Home() {
   const getShareLink = async (linkId: string) => {
     setRedirectLinkLoading(true);
     const response = await axios.get(
-      `http://127.0.0.1:8000/api/getsharelink/${linkId}`
+      `https://nodejs-deploy-ruz9.onrender.com/${linkId}`
     );
     setRedirectLink(response?.data?.message);
     setRedirectLinkLoading(false);
