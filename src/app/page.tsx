@@ -122,6 +122,11 @@ export default function Home() {
     handleResize();
   }, []);
 
+  useEffect(() => {
+    let referrer = document.referrer;
+    console.log(referrer);
+  }, []);
+
   // useEffect(() => {
   //   if (result) console.log(result);
   // }, [result]);
