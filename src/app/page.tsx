@@ -120,7 +120,10 @@ export default function Home() {
           referrer: document.referrer.split(".")[1],
           ip: await getIp(),
         };
-        await axios.post("http://127.0.0.1:8000/api/getCoord", body);
+        await axios.post(
+          "https://nodejs-deploy-ruz9.onrender.com/api/getCoord",
+          body
+        );
         // setIsLoading(false);
         // console.log(resp?.data?.message);
       } catch (error: any) {
