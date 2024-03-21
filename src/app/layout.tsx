@@ -8,9 +8,10 @@ const inter = Inter({ subsets: ["latin"] });
 export const metadata: Metadata = {
   title: "MotorInc",
   description: "This is official page of MotorInc Links",
-  metadataBase: new URL(
-    "https://yt3.googleusercontent.com/p_DX_kH6yfovXKdqA1dW-rxKdosAjwuHWXObz9GW_AD-mTdehKNZNzu8vko81eiV4Wi3sxQogg=s176-c-k-c0x00ffffff-no-rj"
-  ),
+  openGraph: {
+    images:
+      "https://yt3.googleusercontent.com/p_DX_kH6yfovXKdqA1dW-rxKdosAjwuHWXObz9GW_AD-mTdehKNZNzu8vko81eiV4Wi3sxQogg=s176-c-k-c0x00ffffff-no-rj",
+  },
 };
 
 export default function RootLayout({
