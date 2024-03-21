@@ -8,9 +8,8 @@ import { PiDotsThreeBold } from "react-icons/pi";
 import { IoMdClose } from "react-icons/io";
 import { useSearchParams } from "next/navigation";
 
-import shares from "./shares";
-
 import axios from "axios";
+import Shares from "./shares";
 
 interface Item {
   _id?: string;
@@ -54,6 +53,7 @@ const FinalPage = () => {
   const [redirectLink, setRedirectLink] = useState("");
   const [redirectLinkLoading, setRedirectLinkLoading] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
+  const [shareTitle, setShareTitle] = useState<string>("");
 
   const searchParams = useSearchParams();
 
@@ -240,12 +240,12 @@ const FinalPage = () => {
     // handleTTC();
   }, []);
 
-  useEffect(() => {
-    if (deviceType) {
-      sendCoordinates();
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [deviceType]);
+  // useEffect(() => {
+  //   if (deviceType) {
+  //     sendCoordinates();
+  //   }
+  //   // eslint-disable-next-line react-hooks/exhaustive-deps
+  // }, [deviceType]);
 
   useEffect(() => {
     getUrlParams();
@@ -265,6 +265,15 @@ const FinalPage = () => {
       });
     }, 1400);
   }, [highlightLink?.id]);
+
+  useEffect(() => {
+    if (result && result.length > 0 && id) {
+      const newData = result.find((v) => v?.shortId === id);
+      if (newData) {
+        setShareTitle(newData?.title!);
+      }
+    }
+  }, [id, result]);
 
   if (isLoading) {
     return (
@@ -307,8 +316,8 @@ const FinalPage = () => {
                 <IoMdClose className="text-xl" />
               </button>
             </section>
-            <section className="lowerSection h-[calc(100%-18%)] mt-16">
-              {shares &&
+            <section className="flex flex-col lowerSection h-[calc(100%-18%)] mt-16">
+              {/* {shares &&
                 shares.map((item) => {
                   let Variable = item?.logo;
                   return (
@@ -319,7 +328,15 @@ const FinalPage = () => {
                       <div className="logo-div">{Variable}</div>
                       <a
                         className="ml-4 capitalize"
-                        href={redirectLink && `${item?.link}${redirectLink}`}
+                        // href={redirectLink && `${item?.link}${redirectLink}`}
+                        href={`${
+                          result &&
+                          id &&
+                          result.length > 0 &&
+                          result.find((v) => {
+                            return v?.shortId === id;
+                          })
+                        }`}
                         target="_blank"
                       >{`Share ${
                         item?.service === "whatsapp" ||
@@ -329,7 +346,8 @@ const FinalPage = () => {
                       } ${item?.service}`}</a>
                     </div>
                   );
-                })}
+                })} */}
+              <Shares url={redirectLink} title={shareTitle} />
               <div
                 className="share-link flex justify-between items-center w-full border h-14 rounded-lg hover:bg-gray-100 cursor-pointer"
                 onClick={() => {
