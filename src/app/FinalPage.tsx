@@ -347,7 +347,7 @@ const FinalPage = () => {
                     </div>
                   );
                 })} */}
-              <Shares url={redirectLink} title={shareTitle} />
+              <Shares url={redirectLink} title={`\n${shareTitle}`} />
               <div
                 className="share-link flex justify-between items-center w-full border h-14 rounded-lg hover:bg-gray-100 cursor-pointer"
                 onClick={() => {
