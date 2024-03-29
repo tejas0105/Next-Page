@@ -1,25 +1,32 @@
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable @next/next/no-img-element */
 "use client";
 
 import React from "react";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { PiDotsThreeBold } from "react-icons/pi";
 import { IoMdClose } from "react-icons/io";
 import { useSearchParams } from "next/navigation";
+import { SiApplepodcasts } from "react-icons/si";
 
 import axios from "axios";
 import Shares from "./shares";
 
 interface Item {
   _id?: string;
-  shortId: string;
+  id: string;
+  shortId?: string;
   title?: string;
   shortenLink?: string;
-  originalLink: string;
-  visitHistory?: number[];
-  thumbnail: string;
-  hidden: boolean;
+  visitHistory?: [];
+  thumbnail?: string;
+  hidden?: boolean;
+  platform?: {
+    apple: { shortenLink: string; visitHistory: [] };
+    google: { shortenLink: string; visitHistory: [] };
+    spotify: { shortenLink: string; visitHistory: [] };
+  };
 }
 
 interface Coordinates {
@@ -37,6 +44,7 @@ interface Body {
 
 const FinalPage = () => {
   const [result, setResult] = useState<Item[]>([]);
+  const [subLinkResult, setSubLinkResult] = useState<Item[]>([]);
   const [deviceType, setDeviceType] = useState<string>("");
   const [coordinates, setCoordinates] = useState<Coordinates>({
     latitude: 0,
@@ -54,6 +62,16 @@ const FinalPage = () => {
   const [redirectLinkLoading, setRedirectLinkLoading] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
   const [shareTitle, setShareTitle] = useState<string>("");
+  const [matchedData, setMatchedData] = useState<Item[]>([]);
+  const [podcastModal, setPodcastModal] = useState<boolean>(false);
+  const [podcastThumbnail, setPodcastThumbnail] = useState("");
+  const [links, setLinks] = useState({
+    main: "",
+    spotify: "",
+    apple: "",
+    google: "",
+  });
+  const [mainLinkTitle, setMainLinkTitle] = useState("");
 
   const searchParams = useSearchParams();
 
@@ -86,22 +104,36 @@ const FinalPage = () => {
   };
 
   const getData = async () => {
-    const response = await axios.get(
-      "https://nodejs-deploy-ruz9.onrender.com/api/finalpage"
-    );
-    console.log(response);
+    const response = await axios.get("http://127.0.0.1:5000/api/finalpage");
+    // console.log(response);
     setResult(response?.data?.data);
 
     // console.log(result);
     // console.log({ lat: result.latitude, long: result.longitude });
   };
 
-  const handleResize = () => {
+  const getSubLinkData = async () => {
+    const response = await axios.get("http://127.0.0.1:5000/getallsublinkdata");
+    setSubLinkResult(response?.data?.subLinkDoc);
+  };
+
+  const handleResize = useCallback(() => {
     const { innerWidth } = window;
     if (innerWidth <= 768) setDeviceType("mobile");
     else if (innerWidth > 768 && innerWidth <= 1024) setDeviceType("tablet");
     else setDeviceType("desktop");
-  };
+  }, []);
+
+  // const handleResize = () => {
+  //   const { innerWidth } = window;
+  //   if (innerWidth <= 768) setDeviceType("mobile");
+  //   else if (innerWidth > 768 && innerWidth <= 1024) setDeviceType("tablet");
+  //   else setDeviceType("desktop");
+  // };
+
+  const getDataMemoized = useMemo(() => getData, []);
+
+  const getSubLinkDataMemoized = useMemo(() => getSubLinkData, []);
 
   const sendCoordinates = async () => {
     try {
@@ -123,26 +155,20 @@ const FinalPage = () => {
           referrer: document.referrer.split(".")[1],
           ip: await getIp(),
         };
-        await axios.post(
-          "https://nodejs-deploy-ruz9.onrender.com/api/getCoord",
-          body
-        );
+        await axios.post("http://127.0.0.1:5000/api/getCoord", body);
         // setIsLoading(false);
         // console.log(resp?.data?.message);
       } catch (error: any) {
         if (error.code === 1) {
           const ipResp = await axios.get("https://api.ipify.org?format=json");
           const ip = ipResp?.data;
-          await axios.post(
-            "https://nodejs-deploy-ruz9.onrender.com/api/handlenulllocation",
-            {
-              lat: null,
-              long: null,
-              deviceType: deviceType,
-              referrer: document.referrer.split(".")[1],
-              ip: ip,
-            }
-          );
+          await axios.post("http://127.0.0.1:5000/api/handlenulllocation", {
+            lat: null,
+            long: null,
+            deviceType: deviceType,
+            referrer: document.referrer.split(".")[1],
+            ip: ip,
+          });
         }
       }
     } catch (error: any) {
@@ -156,22 +182,19 @@ const FinalPage = () => {
     // const currentTime = new Date().getTime();
     // const timeToClick = (currentTime - startTime) / 1000;
     // console.log("Time to click:", timeToClick, "seconds");
-    const postData = await axios.post(
-      "https://nodejs-deploy-ruz9.onrender.com/api/updateView",
-      {
-        linkId: linkId,
-        lat: coordinates?.latitude,
-        long: coordinates?.longitude,
-        ip: await getIp(),
-      }
-    );
-    console.log(postData?.data?.message);
+    const postData = await axios.post("http://127.0.0.1:5000/api/updateView", {
+      linkId: linkId,
+      lat: coordinates?.latitude,
+      long: coordinates?.longitude,
+      ip: await getIp(),
+    });
+    // console.log(postData?.data?.message);
   };
 
   const handleMoreOptions = async (linkId: string) => {
     if (result && result.length > 0) {
-      const foundId: Item = result.find((v: Item) => v?.shortId === linkId)!;
-      setId(foundId?.shortId);
+      const foundId: Item = result.find((v) => v?.shortId === linkId)!;
+      setId(foundId?.shortId as string);
     }
   };
 
@@ -204,9 +227,13 @@ const FinalPage = () => {
 
   const getShareLink = async (linkId: string) => {
     setRedirectLinkLoading(true);
-    const response = await axios.get(
-      `https://nodejs-deploy-ruz9.onrender.com/api/getsharelink/${linkId}`
+    const response = await axios.post(
+      `http://127.0.0.1:5000/api/getsharelink`,
+      {
+        id: linkId,
+      }
     );
+
     setRedirectLink(response?.data?.message);
     setRedirectLinkLoading(false);
   };
@@ -217,7 +244,7 @@ const FinalPage = () => {
       if (foundId) {
         setTimeout(() => {
           setHighLightLink({
-            id: foundId?.shortId,
+            id: foundId?.shortId as string,
           });
         }, 450);
       }
@@ -235,10 +262,11 @@ const FinalPage = () => {
   }, []);
 
   useEffect(() => {
-    getData();
+    getDataMemoized();
+    getSubLinkDataMemoized();
     handleResize();
     // handleTTC();
-  }, []);
+  }, [getDataMemoized, getSubLinkDataMemoized, handleResize]);
 
   // useEffect(() => {
   //   if (deviceType) {
@@ -246,6 +274,31 @@ const FinalPage = () => {
   //   }
   //   // eslint-disable-next-line react-hooks/exhaustive-deps
   // }, [deviceType]);
+
+  useEffect(() => {
+    if (result && result.length > 0) {
+      if (subLinkResult && subLinkResult.length > 0) {
+        const matchedData = result
+          .map((item1) => {
+            const matchedSubLink = subLinkResult.find((item2) => {
+              return item1.shortId === item2?.id;
+            })!;
+
+            if (matchedSubLink) {
+              return {
+                ...item1,
+                platform: matchedSubLink.platform,
+              };
+            } else {
+              return item1;
+            }
+          })
+          .filter((matchedItem) => matchedItem !== null);
+
+        setMatchedData(matchedData);
+      }
+    }
+  }, [result, subLinkResult]);
 
   useEffect(() => {
     getUrlParams();
@@ -274,6 +327,10 @@ const FinalPage = () => {
       }
     }
   }, [id, result]);
+
+  useEffect(() => {
+    console.log(links);
+  }, [links]);
 
   if (isLoading) {
     return (
@@ -397,61 +454,207 @@ const FinalPage = () => {
           </div>
         </div>
       )}
+      {podcastModal && (
+        <div className="fixed inset-0 z-50 flex justify-center items-center bg-black bg-opacity-70">
+          <div className="bg-white p-5 rounded-2xl shadow-md w-[50rem] h-96 flex flex-col">
+            <section className="upperSection w-full flex justify-end items-center">
+              <button
+                className="hover:bg-gray-200 rounded-md p-2"
+                onClick={() => {
+                  setPodcastModal(false);
+                }}
+              >
+                <IoMdClose className="text-xl" />
+              </button>
+            </section>
+            <section className="lower-section h-96 flex">
+              <section className="left-section">
+                <div className="flex items-center h-full">
+                  <img className="h-32" src={podcastThumbnail} alt="" />
+                </div>
+              </section>
+              <section className="roght-section ml-3 w-[32rem]">
+                <section className="upper-section">
+                  <div className="w-full flex items-center mt-5">
+                    <a
+                      className="underline text-md font-bold"
+                      href={links.main}
+                      target="_blank"
+                    >
+                      {mainLinkTitle}
+                    </a>
+                  </div>
+                </section>
+                <section className="lower section mt-4">
+                  <div>
+                    <h1>Listen on other platforms</h1>
+                  </div>
+                  <div className="flex flex-col h-52">
+                    {links?.apple && (
+                      <a
+                        href={links?.apple}
+                        className="mt-4 text-md flex underline"
+                        target="_blank"
+                      >
+                        Apple Podcasts
+                      </a>
+                    )}
+                    {links?.spotify && (
+                      <a
+                        href={links?.spotify}
+                        className="mt-4 text-md underline"
+                        target="_blank"
+                      >
+                        Spotify Podcasts
+                      </a>
+                    )}
+                    {links?.google && (
+                      <a
+                        href={links?.google}
+                        className="mt-4 text-md underline"
+                        target="_blank"
+                      >
+                        Google Podcasts
+                      </a>
+                    )}
+                  </div>
+                </section>
+              </section>
+            </section>
+          </div>
+        </div>
+      )}
       <div className="flex flex-col items-center w-screen h-screen p-4 bg-gray-100">
         <div className="mt-16 sm:w-[35rem] md:w-[44rem] lg:w-[55rem] h-full">
-          {result &&
-            result.length > 0 &&
-            result.map((item: Item) => {
+          {matchedData &&
+            matchedData.length > 0 &&
+            matchedData.map((item) => {
               return (
-                <a
-                  key={item?._id}
-                  href={item?.shortenLink}
-                  target="_blank"
-                  style={{
-                    backgroundColor: `${
-                      highlightLink?.id === item?.shortId
-                        ? "gray"
-                        : "rgb(249 250 251 / 1)"
-                    }`,
-                  }}
-                  className={`flex items-center border w-full rounded-lg h-20 hover:bg-gray-100 bg-gray-50 shadow-md mb-3 duration-200 ease-in-out`}
-                  onMouseEnter={() => {
-                    showMoreOptions(item?.shortId);
-                  }}
-                  onMouseLeave={() => {
-                    hideMoreOptions(item?.shortId);
-                  }}
-                  onClick={() => {
-                    redirectTo(item?.shortId as string);
-                  }}
-                >
-                  <div className="h-full">
-                    <img
-                      className="h-full rounded-l-md"
-                      src={item?.thumbnail}
-                      alt={item?.title}
-                      // ref={ref}
-                    />
-                  </div>
-                  <div className="h-full w-[calc(100%-141px)] flex justify-center items-center">
-                    <p className="text-xs overflow-ellipsis sm:text-sm md:text-lg w-full text-left ml-3">
-                      {item?.title}
-                    </p>
-                    <div
-                      className="more hidden justify-center items-center options mr-8 p-1 rounded-full hover:bg-gray-300"
-                      id={item?.shortId}
-                      onClick={(e) => {
-                        e.preventDefault();
-                        e.stopPropagation();
-                        setIsModelOpen(true);
-                        handleMoreOptions(item?.shortId);
-                        getShareLink(item?.shortId);
-                      }}
-                    >
-                      <PiDotsThreeBold className="text-2xl" />
+                <div key={item?._id}>
+                  {item?.platform ? (
+                    <div>
+                      <h1
+                        key={item?._id}
+                        // href={item?.shortenLink}
+                        // target="_blank"
+                        style={{
+                          backgroundColor: `${
+                            highlightLink?.id === item?.shortId
+                              ? "gray"
+                              : "rgb(249 250 251 / 1)"
+                          }`,
+                        }}
+                        className={`flex cursor-pointer items-center border w-full rounded-lg h-20 hover:bg-gray-100 bg-gray-50 shadow-md mb-3 duration-200 ease-in-out`}
+                        onMouseEnter={() => {
+                          showMoreOptions(item?.shortId as string);
+                        }}
+                        onMouseLeave={() => {
+                          hideMoreOptions(item?.shortId as string);
+                        }}
+                        onClick={() => {
+                          // redirectTo(item?.shortId as string);
+                          setLinks({
+                            main: item?.shortenLink as string,
+                            apple:
+                              item?.platform! &&
+                              item?.platform.apple?.shortenLink &&
+                              (item?.platform.apple?.shortenLink as string),
+                            spotify:
+                              item?.platform! &&
+                              item?.platform.spotify?.shortenLink &&
+                              (item?.platform.spotify?.shortenLink as string),
+                            google:
+                              item?.platform! &&
+                              item?.platform.google?.shortenLink &&
+                              (item?.platform.google?.shortenLink as string),
+                          });
+                          setMainLinkTitle(item?.title as string);
+                          setPodcastModal(true);
+                          setPodcastThumbnail(item?.thumbnail as string);
+                        }}
+                      >
+                        <div className="h-full">
+                          <img
+                            className="h-full rounded-l-md"
+                            src={item?.thumbnail}
+                            alt={item?.title}
+                            // ref={ref}
+                          />
+                        </div>
+                        <div className="h-full w-[calc(100%-141px)] flex justify-center items-center">
+                          <p className="text-xs overflow-ellipsis sm:text-sm md:text-md w-full text-left ml-3">
+                            {item?.title}
+                          </p>
+                          <div
+                            className="more hidden justify-center items-center options mr-8 p-1 rounded-full hover:bg-gray-300"
+                            id={item?.shortId}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsModelOpen(true);
+                              handleMoreOptions(item?.shortId as string);
+                              getShareLink(item?.shortId as string);
+                            }}
+                          >
+                            <PiDotsThreeBold className="text-2xl" />
+                          </div>
+                        </div>
+                      </h1>
                     </div>
-                  </div>
-                </a>
+                  ) : (
+                    <div>
+                      <a
+                        key={item?._id}
+                        href={item?.shortenLink}
+                        target="_blank"
+                        style={{
+                          backgroundColor: `${
+                            highlightLink?.id === item?.shortId
+                              ? "gray"
+                              : "rgb(249 250 251 / 1)"
+                          }`,
+                        }}
+                        className={`flex items-center border w-full rounded-lg h-20 hover:bg-gray-100 bg-gray-50 shadow-md mb-3 duration-200 ease-in-out`}
+                        onMouseEnter={() => {
+                          showMoreOptions(item?.shortId as string);
+                        }}
+                        onMouseLeave={() => {
+                          hideMoreOptions(item?.shortId as string);
+                        }}
+                        onClick={() => {
+                          redirectTo(item?.shortId as string);
+                        }}
+                      >
+                        <div className="h-full">
+                          <img
+                            className="h-full rounded-l-md"
+                            src={item?.thumbnail}
+                            alt={item?.title}
+                            // ref={ref}
+                          />
+                        </div>
+                        <div className="h-full w-[calc(100%-141px)] flex justify-center items-center">
+                          <p className="text-xs overflow-ellipsis sm:text-sm md:text-md w-full text-left ml-3">
+                            {item?.title}
+                          </p>
+                          <div
+                            className="more hidden justify-center items-center options mr-8 p-1 rounded-full hover:bg-gray-300"
+                            id={item?.shortId}
+                            onClick={(e) => {
+                              e.preventDefault();
+                              e.stopPropagation();
+                              setIsModelOpen(true);
+                              handleMoreOptions(item?.shortId as string);
+                              getShareLink(item?.shortId as string);
+                            }}
+                          >
+                            <PiDotsThreeBold className="text-2xl" />
+                          </div>
+                        </div>
+                      </a>
+                    </div>
+                  )}
+                </div>
               );
             })}
         </div>
