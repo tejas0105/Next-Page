@@ -3,13 +3,11 @@
 "use client";
 
 import React from "react";
-
 import { useEffect, useState, useRef, useCallback, useMemo } from "react";
 import { PiDotsThreeBold } from "react-icons/pi";
 import { IoMdClose } from "react-icons/io";
 import { useSearchParams } from "next/navigation";
 import { SiApplepodcasts } from "react-icons/si";
-
 import axios from "axios";
 import Shares from "./shares";
 
@@ -19,6 +17,7 @@ interface Item {
   shortId?: string;
   title?: string;
   shortenLink?: string;
+  originalLink?: string;
   visitHistory?: [];
   thumbnail?: string;
   hidden?: boolean;
@@ -46,18 +45,11 @@ const FinalPage = () => {
   const [result, setResult] = useState<Item[]>([]);
   const [subLinkResult, setSubLinkResult] = useState<Item[]>([]);
   const [deviceType, setDeviceType] = useState<string>("");
-  const [coordinates, setCoordinates] = useState<Coordinates>({
-    latitude: 0,
-    longitude: 0,
-  });
   const [isModalOpen, setIsModelOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [id, setId] = useState("");
   const [isCopied, setIsCopied] = useState(false);
   const [params, setParams] = useState("");
-  const [highlightLink, setHighLightLink] = useState({
-    id: "",
-  });
   const [redirectLink, setRedirectLink] = useState("");
   const [redirectLinkLoading, setRedirectLinkLoading] = useState(false);
   const [startTime, setStartTime] = useState<number>(0);
@@ -65,13 +57,25 @@ const FinalPage = () => {
   const [matchedData, setMatchedData] = useState<Item[]>([]);
   const [podcastModal, setPodcastModal] = useState<boolean>(false);
   const [podcastThumbnail, setPodcastThumbnail] = useState("");
+
+  const [coordinates, setCoordinates] = useState<Coordinates>({
+    latitude: 0,
+    longitude: 0,
+  });
+  const [highlightLink, setHighLightLink] = useState({
+    id: "",
+  });
   const [links, setLinks] = useState({
     main: "",
     spotify: "",
     apple: "",
     google: "",
   });
-  const [mainLinkTitle, setMainLinkTitle] = useState("");
+  const [mainLink, setMainLink] = useState({
+    title: "",
+    id: "",
+  });
+  const [subLink, setSubLink] = useState([]);
 
   const searchParams = useSearchParams();
 
@@ -251,6 +255,24 @@ const FinalPage = () => {
     }
   };
 
+  const updateViewSublink = async (
+    platform: string,
+    subLinkId: string
+  ): Promise<void> => {
+    try {
+      const response = await axios.post(
+        "http://127.0.0.1:8000/api/updateviewsublink",
+        {
+          platform: platform,
+          id: subLinkId,
+        }
+      );
+      console.log(response?.data?.message);
+    } catch (error: any) {
+      console.log(error.message);
+    }
+  };
+
   // const handleTTC = async () => {
   //   const startTime = new Date().getTime();
   //   setStartTime(startTime);
@@ -329,8 +351,8 @@ const FinalPage = () => {
   }, [id, result]);
 
   useEffect(() => {
-    console.log(links);
-  }, [links]);
+    console.log(subLink);
+  }, [subLink]);
 
   if (isLoading) {
     return (
@@ -462,6 +484,7 @@ const FinalPage = () => {
                 className="hover:bg-gray-200 rounded-md p-2"
                 onClick={() => {
                   setPodcastModal(false);
+                  setSubLink([]);
                 }}
               >
                 <IoMdClose className="text-xl" />
@@ -480,8 +503,11 @@ const FinalPage = () => {
                       className="underline text-md font-bold"
                       href={links.main}
                       target="_blank"
+                      onClick={() => {
+                        redirectTo(mainLink?.id);
+                      }}
                     >
-                      {mainLinkTitle}
+                      {mainLink?.title}
                     </a>
                   </div>
                 </section>
@@ -568,8 +594,40 @@ const FinalPage = () => {
                               item?.platform.google?.shortenLink &&
                               (item?.platform.google?.shortenLink as string),
                           });
-                          setMainLinkTitle(item?.title as string);
+                          setMainLink({
+                            id: item?.shortId as string,
+                            title: item?.title as string,
+                          });
                           setPodcastModal(true);
+                          setSubLink((prevData) => {
+                            return [
+                              ...prevData,
+                              {
+                                id:
+                                  item?.platform! &&
+                                  item?.platform.spotify?.shortenLink &&
+                                  item?.platform?.spotify?.shortId,
+                                platform:
+                                  item?.platform! &&
+                                  item?.platform.spotify?.shortenLink &&
+                                  "spotify",
+                              },
+                              {
+                                id:
+                                  item?.platform! &&
+                                  item?.platform.apple?.shortenLink &&
+                                  item?.platform?.apple?.shortId,
+                                platform: "apple",
+                              },
+                              {
+                                id:
+                                  item?.platform! &&
+                                  item?.platform.google?.shortenLink &&
+                                  item?.platform?.google?.shortId,
+                                platform: "google",
+                              },
+                            ];
+                          });
                           setPodcastThumbnail(item?.thumbnail as string);
                         }}
                       >
@@ -605,7 +663,7 @@ const FinalPage = () => {
                     <div>
                       <a
                         key={item?._id}
-                        href={item?.shortenLink}
+                        href={item?.originalLink}
                         target="_blank"
                         style={{
                           backgroundColor: `${
